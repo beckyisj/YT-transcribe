@@ -1,0 +1,47 @@
+.yt-transcript-copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-right: 8px;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    border: 2px solid #fff;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.yt-transcript-copy-icon-bg {
+    background: #ffb3b3;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    transition: filter 0.2s, background 0.2s;
+}
+
+.yt-transcript-copy-flash {
+    background: #ff5252 !important;
+}
+
+.yt-transcript-copy-btn img {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.yt-transcript-copy-btn:hover .yt-transcript-copy-icon-bg {
+    filter: brightness(1.1) drop-shadow(0 0 4px #ffb3b3);
+}
+
+.yt-transcript-copy-btn:active {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    border-color: #ffb3b3;
+} 
