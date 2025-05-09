@@ -1,3 +1,9 @@
+// Function to extract YouTube video ID from URL
+function getYouTubeVideoId() {
+    const url = new URL(window.location.href);
+    return url.searchParams.get('v');
+}
+
 // Function to check if we're on a YouTube video page
 function isVideoPage() {
     return window.location.pathname.includes('/watch');
@@ -73,6 +79,30 @@ function createCopyButton() {
 
     button.addEventListener('click', async (e) => {
         e.stopPropagation();
+        const videoId = getYouTubeVideoId();
+        if (videoId) {
+            // Try to fetch the full transcript from the local API
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/transcript?video_id=${videoId}`);
+                const data = await response.json();
+                if (data.success && data.transcript) {
+                    await navigator.clipboard.writeText(data.transcript);
+                    iconBg.classList.add('yt-transcript-copy-flash');
+                    setTimeout(() => {
+                        iconBg.classList.remove('yt-transcript-copy-flash');
+                    }, 600);
+                    icon.style.filter = 'grayscale(1)';
+                    setTimeout(() => {
+                        icon.style.filter = '';
+                    }, 1200);
+                    return;
+                }
+            } catch (err) {
+                // If API call fails, fall back to DOM methods
+                console.error('API call failed, falling back to DOM:', err);
+            }
+        }
+        // Fallback: try transcript panel or captions
         const transcriptButton = await findTranscriptButton();
         if (transcriptButton) {
             transcriptButton.click();
