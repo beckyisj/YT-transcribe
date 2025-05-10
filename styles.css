@@ -2,13 +2,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     background: none;
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    margin-right: 8px;
+    margin-right: 4px;
     position: relative;
     box-shadow: 0 4px 16px rgba(0,0,0,0.18);
     border: 2px solid #fff;
@@ -18,8 +18,8 @@
 .yt-transcript-copy-icon-bg {
     background: #ffb3b3;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -28,12 +28,12 @@
 }
 
 .yt-transcript-copy-flash {
-    background: #ff5252 !important;
+    background: #4caf50 !important; /* Green flash for success */
 }
 
 .yt-transcript-copy-btn img {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: block;
     border: none;
 }
