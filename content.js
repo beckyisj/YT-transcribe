@@ -45,6 +45,7 @@ function waitForElement(selector, timeout = 10000) {
 
 // Function to create and add the copy button
 function createCopyButton() {
+    console.log("createCopyButton running!");
     if (document.querySelector('.yt-transcript-copy-btn')) return;
     const button = document.createElement('button');
     button.className = 'yt-transcript-copy-btn';
@@ -67,6 +68,7 @@ function createCopyButton() {
 
     // Create the icon image
     const icon = document.createElement('img');
+    console.log("Icon element created", icon);
     try {
         icon.src = chrome.runtime.getURL('icon48.png');
     } catch {
@@ -75,11 +77,32 @@ function createCopyButton() {
     icon.alt = 'Copy Transcript';
     icon.style.display = 'block';
     iconBg.appendChild(icon);
+    console.log("Icon appended to iconBg", iconBg);
+
+    // Create the spinner (hidden by default)
+    const spinner = document.createElement('div');
+    spinner.className = 'yt-transcript-copy-spinner';
+    spinner.style.display = 'none';
+    iconBg.appendChild(spinner);
+    console.log("Spinner created and appended", spinner);
+
     button.appendChild(iconBg);
+    console.log("iconBg appended to button", button);
+
+    async function showSpinner() {
+        icon.style.display = 'none';
+        spinner.style.display = 'block';
+    }
+    function hideSpinner() {
+        spinner.style.display = 'none';
+        icon.style.display = 'block';
+    }
 
     button.addEventListener('click', async (e) => {
         e.stopPropagation();
+        await showSpinner();
         const videoId = getYouTubeVideoId();
+        let copied = false;
         if (videoId) {
             // Try to fetch the full transcript from the local API
             try {
@@ -87,68 +110,75 @@ function createCopyButton() {
                 const data = await response.json();
                 if (data.success && data.transcript) {
                     await navigator.clipboard.writeText(data.transcript);
-                    iconBg.classList.add('yt-transcript-copy-flash');
-                    setTimeout(() => {
-                        iconBg.classList.remove('yt-transcript-copy-flash');
-                    }, 600);
-                    icon.style.filter = 'grayscale(1)';
-                    setTimeout(() => {
-                        icon.style.filter = '';
-                    }, 1200);
-                    return;
+                    copied = true;
                 }
             } catch (err) {
                 // If API call fails, fall back to DOM methods
                 console.error('API call failed, falling back to DOM:', err);
             }
         }
-        // Fallback: try transcript panel or captions
-        const transcriptButton = await findTranscriptButton();
-        if (transcriptButton) {
-            transcriptButton.click();
-            setTimeout(() => {
-                const transcriptText = Array.from(document.querySelectorAll('.segment-text'))
-                    .map(segment => segment.textContent)
-                    .join('\n');
-                if (transcriptText) {
-                    navigator.clipboard.writeText(transcriptText)
+        if (!copied) {
+            // Fallback: try transcript panel or captions
+            const transcriptButton = await findTranscriptButton();
+            if (transcriptButton) {
+                transcriptButton.click();
+                setTimeout(() => {
+                    const transcriptText = Array.from(document.querySelectorAll('.segment-text'))
+                        .map(segment => segment.textContent)
+                        .join('\n');
+                    if (transcriptText) {
+                        navigator.clipboard.writeText(transcriptText)
+                            .then(() => {
+                                copied = true;
+                                icon.style.filter = 'grayscale(1)';
+                                setTimeout(() => {
+                                    icon.style.filter = '';
+                                }, 1200);
+                            })
+                            .catch(err => {
+                                console.error('Failed to copy transcript:', err);
+                                alert('Failed to copy transcript');
+                            });
+                    } else {
+                        alert('No transcript available for this video');
+                    }
+                }, 1000);
+            } else {
+                // Fallback: copy visible captions
+                const captionSegments = Array.from(document.querySelectorAll('.ytp-caption-segment'));
+                const captionsText = captionSegments.map(el => el.textContent.trim()).join('\n');
+                if (captionsText) {
+                    navigator.clipboard.writeText(captionsText)
                         .then(() => {
+                            copied = true;
+                            iconBg.classList.add('yt-transcript-copy-flash');
+                            setTimeout(() => {
+                                iconBg.classList.remove('yt-transcript-copy-flash');
+                            }, 600);
                             icon.style.filter = 'grayscale(1)';
                             setTimeout(() => {
                                 icon.style.filter = '';
                             }, 1200);
                         })
                         .catch(err => {
-                            console.error('Failed to copy transcript:', err);
-                            alert('Failed to copy transcript');
+                            console.error('Failed to copy captions:', err);
+                            alert('Failed to copy captions');
                         });
                 } else {
-                    alert('No transcript available for this video');
+                    alert('No transcript or captions available for this video');
                 }
-            }, 1000);
-        } else {
-            // Fallback: copy visible captions
-            const captionSegments = Array.from(document.querySelectorAll('.ytp-caption-segment'));
-            const captionsText = captionSegments.map(el => el.textContent.trim()).join('\n');
-            if (captionsText) {
-                navigator.clipboard.writeText(captionsText)
-                    .then(() => {
-                        iconBg.classList.add('yt-transcript-copy-flash');
-                        setTimeout(() => {
-                            iconBg.classList.remove('yt-transcript-copy-flash');
-                        }, 600);
-                        icon.style.filter = 'grayscale(1)';
-                        setTimeout(() => {
-                            icon.style.filter = '';
-                        }, 1200);
-                    })
-                    .catch(err => {
-                        console.error('Failed to copy captions:', err);
-                        alert('Failed to copy captions');
-                    });
-            } else {
-                alert('No transcript or captions available for this video');
             }
+        }
+        hideSpinner();
+        if (copied) {
+            iconBg.classList.add('yt-transcript-copy-flash');
+            setTimeout(() => {
+                iconBg.classList.remove('yt-transcript-copy-flash');
+            }, 600);
+            icon.style.filter = 'grayscale(1)';
+            setTimeout(() => {
+                icon.style.filter = '';
+            }, 1200);
         }
     });
 
